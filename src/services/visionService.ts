@@ -5,60 +5,9 @@ import type { FoodData } from '../contexts/AppContext';
 const API_KEY = 'AIzaSyB45LM6pzzDwrVa_LwfLy4_HHF2qvjVFcs';
 const API_URL = `https://vision.googleapis.com/v1/images:annotate?key=${API_KEY}`;
 
-// Common food categories for better classification
-const foodCategories = {
-  fruits: ['apple', 'banana', 'orange', 'grape', 'strawberry', 'blueberry', 'mango', 'pineapple', 'watermelon', 'kiwi'],
-  vegetables: ['carrot', 'broccoli', 'tomato', 'cucumber', 'lettuce', 'potato', 'onion', 'pepper', 'spinach'],
-  proteins: ['chicken', 'beef', 'fish', 'egg', 'tofu', 'salmon', 'shrimp', 'pork', 'turkey'],
-  grains: ['bread', 'rice', 'pasta', 'cereal', 'oatmeal', 'quinoa'],
-  dairy: ['milk', 'cheese', 'yogurt', 'butter', 'cream'],
-  desserts: ['cake', 'ice cream', 'cookie', 'chocolate', 'pie', 'donut']
-};
-
-function findSpecificFood(labels: any[]): { name: string; confidence: number } | null {
-  // First, try to find exact matches in our food categories
-  for (const label of labels) {
-    const description = label.description.toLowerCase();
-    
-    for (const [category, foods] of Object.entries(foodCategories)) {
-      const match = foods.find(food => 
-        description.includes(food) || 
-        description === food ||
-        description.endsWith(` ${food}`) ||
-        description.startsWith(`${food} `)
-      );
-      
-      if (match) {
-        return {
-          name: match,
-          confidence: label.score * 100
-        };
-      }
-    }
-  }
-  
-  // If no exact match, look for category matches and get alternatives
-  const foodMatches = labels
-    .filter(label => {
-      const desc = label.description.toLowerCase();
-      return Object.keys(foodCategories).some(category => 
-        desc.includes(category) || 
-        foodCategories[category as keyof typeof foodCategories].some(food => 
-          desc.includes(food)
-        )
-      );
-    })
-    .map(label => ({
-      name: label.description,
-      confidence: label.score * 100
-    }));
-  
-  return foodMatches.length > 0 ? foodMatches[0] : null;
-}
-
 export async function analyzeImage(imageData: string): Promise<FoodData> {
   try {
-    // Extract base64 data
+    // Extract base64 data (remove the "data:image/jpeg;base64," part)
     const base64Image = imageData.split(',')[1];
     
     // Prepare request to Vision API
@@ -71,15 +20,11 @@ export async function analyzeImage(imageData: string): Promise<FoodData> {
           features: [
             {
               type: 'LABEL_DETECTION',
-              maxResults: 15
+              maxResults: 10
             },
             {
               type: 'WEB_DETECTION',
-              maxResults: 15
-            },
-            {
-              type: 'OBJECT_LOCALIZATION',
-              maxResults: 15
+              maxResults: 10
             }
           ]
         }
@@ -100,48 +45,74 @@ export async function analyzeImage(imageData: string): Promise<FoodData> {
     }
     
     const data = await response.json();
-    const apiResponse = data.responses[0];
     
-    if (!apiResponse) {
-      throw new Error('No response from vision API');
-    }
-    
-    // Combine all detection results
-    const allLabels = [
-      ...(apiResponse.labelAnnotations || []),
-      ...(apiResponse.localizedObjectAnnotations || []),
-      ...((apiResponse.webDetection?.webEntities || []).map((entity: any) => ({
-        description: entity.description,
-        score: entity.score || 0.5
-      })))
-    ];
-    
-    // Find specific food match
-    const foodMatch = findSpecificFood(allLabels);
-    
-    if (!foodMatch) {
-      // If no specific match, check if we have multiple possibilities
-      const possibleFoods = allLabels
-        .filter(label => label.score > 0.5)
-        .map(label => ({
-          name: label.description,
-          confidence: label.score * 100
-        }))
-        .slice(0, 3);
-      
-      if (possibleFoods.length > 0) {
-        throw { type: 'ALTERNATIVES', alternatives: possibleFoods };
-      }
-      
+    // Check if annotations exist
+    if (!data.responses[0]?.labelAnnotations || data.responses[0].labelAnnotations.length === 0) {
       throw new Error('No food items detected in the image');
     }
     
+    // Filter for food-related labels
+    const foodLabels = data.responses[0].labelAnnotations.filter((label: any) => {
+      // Common food-related terms to match in description
+      const foodTerms = [
+        'food', 'dish', 'meal', 'cuisine', 'fruit', 'vegetable', 'meat', 'dessert', 
+        'breakfast', 'lunch', 'dinner', 'snack', 'bread', 'rice', 'pasta', 'pizza',
+        'burger', 'sandwich', 'salad', 'soup', 'stew', 'fish', 'seafood', 'chicken',
+        'beef', 'pork', 'lamb', 'dairy', 'cheese', 'yogurt', 'ice cream', 'cake',
+        'chocolate', 'coffee', 'tea', 'juice', 'smoothie', 'drink'
+      ];
+      
+      return foodTerms.some(term => 
+        label.description.toLowerCase().includes(term)
+      );
+    });
+    
+    // Also check web detection results for more context
+    const webDetection = data.responses[0].webDetection;
+    if (webDetection?.webEntities) {
+      const webFoodLabels = webDetection.webEntities
+        .filter((entity: any) => entity.score > 0.5)
+        .map((entity: any) => ({
+          description: entity.description,
+          score: entity.score
+        }));
+      
+      // Combine with existing labels if they're food-related
+      webFoodLabels.forEach((webLabel: any) => {
+        if (!foodLabels.some(label => label.description === webLabel.description)) {
+          foodLabels.push(webLabel);
+        }
+      });
+    }
+    
+    // If no food labels found after filtering
+    if (foodLabels.length === 0) {
+      throw new Error('No food items detected in the image');
+    }
+    
+    // Sort by confidence score
+    foodLabels.sort((a: any, b: any) => b.score - a.score);
+    
+    // Check confidence level of top label
+    const topLabel = foodLabels[0];
+    
+    if (topLabel.score < 0.7) {
+      // Get multiple alternatives if confidence is low
+      const alternatives = foodLabels.slice(0, 3).map((label: any) => ({
+        name: label.description,
+        confidence: label.score * 100
+      }));
+      
+      throw { type: 'ALTERNATIVES', alternatives };
+    }
+    
     // Get nutrition data for the identified food
-    const nutritionData = await getFoodData(foodMatch.name);
+    const foodName = topLabel.description;
+    const nutritionData = await getFoodData(foodName);
     
     return {
-      name: foodMatch.name,
-      confidence: foodMatch.confidence,
+      name: foodName,
+      confidence: topLabel.score * 100,
       ...nutritionData
     };
   } catch (error) {
