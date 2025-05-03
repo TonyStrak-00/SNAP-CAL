@@ -1,29 +1,20 @@
 import React, { useRef, useState } from 'react';
 import { Camera, Upload, Image as ImageIcon } from 'lucide-react';
 import { useAppContext } from '../contexts/AppContext';
+import CameraModal from '../components/camera/CameraModal';
 
 const CaptureScreen: React.FC = () => {
   const { dispatch } = useAppContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [showCameraModal, setShowCameraModal] = useState(false);
   
-  // Handle camera capture
-  const handleCameraCapture = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.setAttribute('capture', 'environment');
-      fileInputRef.current.click();
-    }
-  };
-  
-  // Handle file upload
   const handleFileUpload = () => {
     if (fileInputRef.current) {
-      fileInputRef.current.removeAttribute('capture');
       fileInputRef.current.click();
     }
   };
   
-  // Process the selected file
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -31,7 +22,6 @@ const CaptureScreen: React.FC = () => {
     }
   };
   
-  // Handle drag events
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -43,7 +33,6 @@ const CaptureScreen: React.FC = () => {
     }
   };
   
-  // Handle drop event
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -54,7 +43,6 @@ const CaptureScreen: React.FC = () => {
     }
   };
   
-  // Process the file (convert to base64 and set in state)
   const processFile = (file: File) => {
     if (!file.type.match('image.*')) {
       alert('Please select an image file (JPG, PNG)');
@@ -74,12 +62,12 @@ const CaptureScreen: React.FC = () => {
     reader.readAsDataURL(file);
   };
   
+  const handleCameraCapture = (imageData: string) => {
+    dispatch({ type: 'SET_IMAGE', payload: imageData });
+  };
+  
   return (
-    <section 
-      id="capture-section" 
-      className="py-12 md:py-16"
-      onDragEnter={handleDrag}
-    >
+    <section id="capture-section" className="py-12 md:py-16" onDragEnter={handleDrag}>
       <div className="max-w-md mx-auto">
         <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">
           Upload Your Food Photo
@@ -105,7 +93,7 @@ const CaptureScreen: React.FC = () => {
         
         <div className="grid grid-cols-2 gap-4">
           <button
-            onClick={handleCameraCapture}
+            onClick={() => setShowCameraModal(true)}
             className="flex flex-col items-center justify-center p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition-colors duration-200 aspect-square"
           >
             <Camera className="w-10 h-10 text-emerald-500 mb-3" />
@@ -129,6 +117,12 @@ const CaptureScreen: React.FC = () => {
           onChange={handleFileChange}
         />
       </div>
+      
+      <CameraModal
+        isOpen={showCameraModal}
+        onClose={() => setShowCameraModal(false)}
+        onCapture={handleCameraCapture}
+      />
     </section>
   );
 };
