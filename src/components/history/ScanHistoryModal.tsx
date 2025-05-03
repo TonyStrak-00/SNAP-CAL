@@ -72,7 +72,7 @@ const ScanHistoryModal: React.FC<ScanHistoryModalProps> = ({ isOpen, onClose }) 
                   key={scan.id}
                   className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
                 >
-                  <div className="flex justify-between items-start mb-2">
+                  <div className="flex justify-between items-start mb-3">
                     <h3 className="text-lg font-semibold text-gray-800">
                       {scan.name}
                     </h3>
@@ -81,22 +81,22 @@ const ScanHistoryModal: React.FC<ScanHistoryModalProps> = ({ isOpen, onClose }) 
                     </span>
                   </div>
                   
-                  <div className="grid grid-cols-4 gap-4 mt-3">
+                  <div className="grid grid-cols-4 gap-4">
                     <div className="bg-emerald-50 p-2 rounded">
-                      <p className="text-xs text-gray-600">Calories</p>
-                      <p className="font-semibold">{scan.calories} kcal</p>
+                      <p className="text-xs text-emerald-700">Calories</p>
+                      <p className="font-semibold text-emerald-900">{scan.calories} kcal</p>
                     </div>
                     <div className="bg-blue-50 p-2 rounded">
-                      <p className="text-xs text-gray-600">Protein</p>
-                      <p className="font-semibold">{scan.protein}g</p>
+                      <p className="text-xs text-blue-700">Protein</p>
+                      <p className="font-semibold text-blue-900">{scan.protein}g</p>
                     </div>
                     <div className="bg-amber-50 p-2 rounded">
-                      <p className="text-xs text-gray-600">Carbs</p>
-                      <p className="font-semibold">{scan.carbs}g</p>
+                      <p className="text-xs text-amber-700">Carbs</p>
+                      <p className="font-semibold text-amber-900">{scan.carbs}g</p>
                     </div>
                     <div className="bg-purple-50 p-2 rounded">
-                      <p className="text-xs text-gray-600">Fat</p>
-                      <p className="font-semibold">{scan.fat}g</p>
+                      <p className="text-xs text-purple-700">Fat</p>
+                      <p className="font-semibold text-purple-900">{scan.fat}g</p>
                     </div>
                   </div>
                 </div>

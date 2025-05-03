@@ -12,8 +12,10 @@ const LandingScreen: React.FC = () => {
   return (
     <section className="py-16 md:py-24 flex flex-col items-center text-center">
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-          Snap • Identify • Track
+        <h1 className="text-4xl md:text-5xl font-bold mb-4">
+          <span className="text-blue-500">Snap</span> • 
+          <span className="text-emerald-500">Track</span> • 
+          <span className="text-amber-500">Calories</span>
         </h1>
         <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
           Instantly know what's on your plate with a simple photo. Get accurate calories and macros in seconds.

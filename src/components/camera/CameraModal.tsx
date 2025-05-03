@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Camera, X } from 'lucide-react';
+import { Camera } from 'lucide-react';
 
 interface CameraModalProps {
   isOpen: boolean;
@@ -119,45 +119,32 @@ const CameraModal: React.FC<CameraModalProps> = ({ isOpen, onClose, onCapture })
   if (!isOpen) return null;
   
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg w-full max-w-2xl overflow-hidden relative">
-        <div className="absolute top-4 right-4 z-10">
-          <button
-            onClick={onClose}
-            className="p-2 bg-black bg-opacity-50 text-white rounded-full hover:bg-opacity-70 transition-colors duration-200"
-            aria-label="Close camera"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <div className="fixed inset-0 bg-black z-50 flex flex-col">
+      <div className="relative flex-grow">
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          className="w-full h-full object-cover"
+          style={{ transform: 'scaleX(-1)' }}
+        />
         
-        <div className="relative aspect-video bg-black">
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            className="w-full h-full object-cover"
-            style={{ transform: 'scaleX(-1)' }}
-          />
-          
-          {error && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 text-white p-6 text-center">
-              <p>{error}</p>
-            </div>
-          )}
-        </div>
-        
-        <div className="p-4 bg-gray-50 flex justify-center">
-          <button
-            onClick={handleCapture}
-            className="px-6 py-3 bg-emerald-500 text-white font-medium rounded-full shadow-lg hover:bg-emerald-600 transition-colors duration-200 flex items-center"
-            disabled={!!error}
-          >
-            <Camera className="w-5 h-5 mr-2" />
-            Take Photo
-          </button>
-        </div>
+        {error && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 text-white p-6 text-center">
+            <p>{error}</p>
+          </div>
+        )}
+      </div>
+      
+      <div className="absolute bottom-8 left-0 right-0 flex justify-center">
+        <button
+          onClick={handleCapture}
+          className="p-4 bg-emerald-500 rounded-full shadow-lg hover:bg-emerald-600 transition-colors duration-200"
+          disabled={!!error}
+        >
+          <Camera className="w-8 h-8 text-white" />
+        </button>
       </div>
     </div>
   );
