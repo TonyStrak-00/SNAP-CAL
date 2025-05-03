@@ -1,11 +1,44 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAppContext } from '../contexts/AppContext';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 import FoodCard from '../components/cards/FoodCard';
 import MacronutrientCard from '../components/cards/MacronutrientCard';
 
 const ResultsScreen: React.FC = () => {
   const { state } = useAppContext();
+  const { user } = useAuth();
   const { foodData } = state;
+  
+  useEffect(() => {
+    if (foodData && user) {
+      saveScanToHistory();
+    }
+  }, [foodData, user]);
+  
+  const saveScanToHistory = async () => {
+    if (!foodData || !user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('scan_history')
+        .insert([
+          {
+            user_id: user.id,
+            food_name: foodData.name,
+            calories: foodData.calories,
+            protein: foodData.protein,
+            carbs: foodData.carbs,
+            fat: foodData.fat,
+            confidence: foodData.confidence
+          }
+        ]);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving scan to history:', error);
+    }
+  };
   
   if (!foodData) return null;
   
