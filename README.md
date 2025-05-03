@@ -1,2 +1,4 @@
 # SNAP-CAL
-Repository created by Bolt to GitHub extension
+MY SnNAP  CAl is an application for tracking the calorie
+
+
