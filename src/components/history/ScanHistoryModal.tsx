@@ -41,6 +41,22 @@ const ScanHistoryModal: React.FC<ScanHistoryModalProps> = ({ isOpen, onClose }) 
       setLoading(false);
     }
   };
+
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return {
+      date: date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: 'numeric'
+      }),
+      time: date.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      })
+    };
+  };
   
   if (!isOpen) return null;
   
@@ -67,40 +83,45 @@ const ScanHistoryModal: React.FC<ScanHistoryModalProps> = ({ isOpen, onClose }) 
         ) : (
           <div className="overflow-y-auto flex-1">
             <div className="grid gap-4">
-              {history.map((scan) => (
-                <div
-                  key={scan.id}
-                  className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <h3 className="text-lg font-semibold text-gray-800">
-                      {scan.name}
-                    </h3>
-                    <span className="text-sm text-gray-500">
-                      {new Date(scan.created_at).toLocaleDateString()}
-                    </span>
+              {history.map((scan) => {
+                const { date, time } = formatDateTime(scan.created_at);
+                return (
+                  <div
+                    key={scan.id}
+                    className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-800">
+                          {scan.food_name}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          {time} • {date}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-4 gap-4">
+                      <div className="bg-emerald-50 p-2 rounded">
+                        <p className="text-xs text-emerald-700">Calories</p>
+                        <p className="font-semibold text-emerald-900">{scan.calories} kcal</p>
+                      </div>
+                      <div className="bg-blue-50 p-2 rounded">
+                        <p className="text-xs text-blue-700">Protein</p>
+                        <p className="font-semibold text-blue-900">{scan.protein}g</p>
+                      </div>
+                      <div className="bg-amber-50 p-2 rounded">
+                        <p className="text-xs text-amber-700">Carbs</p>
+                        <p className="font-semibold text-amber-900">{scan.carbs}g</p>
+                      </div>
+                      <div className="bg-purple-50 p-2 rounded">
+                        <p className="text-xs text-purple-700">Fat</p>
+                        <p className="font-semibold text-purple-900">{scan.fat}g</p>
+                      </div>
+                    </div>
                   </div>
-                  
-                  <div className="grid grid-cols-4 gap-4">
-                    <div className="bg-emerald-50 p-2 rounded">
-                      <p className="text-xs text-emerald-700">Calories</p>
-                      <p className="font-semibold text-emerald-900">{scan.calories} kcal</p>
-                    </div>
-                    <div className="bg-blue-50 p-2 rounded">
-                      <p className="text-xs text-blue-700">Protein</p>
-                      <p className="font-semibold text-blue-900">{scan.protein}g</p>
-                    </div>
-                    <div className="bg-amber-50 p-2 rounded">
-                      <p className="text-xs text-amber-700">Carbs</p>
-                      <p className="font-semibold text-amber-900">{scan.carbs}g</p>
-                    </div>
-                    <div className="bg-purple-50 p-2 rounded">
-                      <p className="text-xs text-purple-700">Fat</p>
-                      <p className="font-semibold text-purple-900">{scan.fat}g</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
