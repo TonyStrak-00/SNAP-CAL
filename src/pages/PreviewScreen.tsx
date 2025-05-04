@@ -1,10 +1,13 @@
 import React from 'react';
-import { X, ArrowRight } from 'lucide-react';
+import { X, ArrowRight, Camera, Upload } from 'lucide-react';
 import { useAppContext } from '../contexts/AppContext';
 import { analyzeImage } from '../services/visionService';
+import CameraModal from '../components/camera/CameraModal';
 
 const PreviewScreen: React.FC = () => {
   const { state, dispatch } = useAppContext();
+  const [showCameraModal, setShowCameraModal] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   
   const handleRemoveImage = () => {
     dispatch({ type: 'CLEAR_IMAGE' });
@@ -25,6 +28,28 @@ const PreviewScreen: React.FC = () => {
         dispatch({ type: 'SET_ERROR', payload: 'An unknown error occurred' });
       }
     }
+  };
+
+  const handleFileUpload = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64 = e.target?.result as string;
+        dispatch({ type: 'SET_IMAGE', payload: base64 });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCameraCapture = (imageData: string) => {
+    dispatch({ type: 'SET_IMAGE', payload: imageData });
   };
   
   return (
@@ -51,7 +76,25 @@ const PreviewScreen: React.FC = () => {
           </div>
         )}
         
-        <div className="p-4">
+        <div className="p-4 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              onClick={() => setShowCameraModal(true)}
+              className="flex items-center justify-center py-2 px-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              <Camera className="w-5 h-5 mr-2" />
+              Retake Photo
+            </button>
+            
+            <button
+              onClick={handleFileUpload}
+              className="flex items-center justify-center py-2 px-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              <Upload className="w-5 h-5 mr-2" />
+              Reupload
+            </button>
+          </div>
+          
           <button
             onClick={handleAnalyze}
             className="w-full flex items-center justify-center py-3 px-4 bg-emerald-500 text-white font-medium rounded-lg shadow hover:bg-emerald-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
@@ -65,6 +108,20 @@ const PreviewScreen: React.FC = () => {
       <p className="text-sm text-center text-gray-500">
         Photos are processed securely; no copies are stored.
       </p>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/jpg,image/png"
+        className="hidden"
+        onChange={handleFileChange}
+      />
+
+      <CameraModal
+        isOpen={showCameraModal}
+        onClose={() => setShowCameraModal(false)}
+        onCapture={handleCameraCapture}
+      />
     </div>
   );
 };

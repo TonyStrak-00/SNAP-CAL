@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Camera } from 'lucide-react';
+import { Camera, ArrowLeft } from 'lucide-react';
 
 interface CameraModalProps {
   isOpen: boolean;
@@ -120,6 +120,15 @@ const CameraModal: React.FC<CameraModalProps> = ({ isOpen, onClose, onCapture })
   
   return (
     <div className="fixed inset-0 bg-black z-50 flex flex-col">
+      <div className="absolute top-4 right-4 z-10">
+        <button
+          onClick={onClose}
+          className="p-2 text-white hover:text-gray-200 transition-colors"
+        >
+          <ArrowLeft className="w-6 h-6" />
+        </button>
+      </div>
+      
       <div className="relative flex-grow">
         <video
           ref={videoRef}
